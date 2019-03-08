@@ -1,0 +1,4 @@
+# ignore auto-generated and temp files
+*.o
+*_example
+*.swp

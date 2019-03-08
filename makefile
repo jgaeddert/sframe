@@ -14,3 +14,6 @@ ${prog} : % : %.cc ${lib}
 
 all: ${prog}
 
+clean:
+	rm -f ${lib} ${prog}
+
