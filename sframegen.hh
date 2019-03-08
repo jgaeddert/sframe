@@ -22,7 +22,8 @@ class sframegen : public sframe
     const std::complex<float> * generate(unsigned char * _payload);
 
   protected:
-
+    unsigned int   m;       ///< filter semi-length
+    firinterp_crcf interp;  ///< square-root Nyquist matched filter interpolator
 };
 
 #endif // __SFRAMEGEN_HH__
