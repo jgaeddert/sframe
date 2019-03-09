@@ -36,23 +36,22 @@ const std::complex<float> * sframegen::generate(unsigned char * _payload)
 
     // interpolate result
     firinterp_crcf_reset(interp);
-    unsigned int i;
     unsigned int n = 0;
 
     // first guard period, compensating for filter delay
-    for (i=0; i<num_symbols_guard - m; i++)
+    for (unsigned int i=0; i<num_symbols_guard - m; i++)
         firinterp_crcf_execute(interp, 0, &buf_slot[2*n++]);
 
-    // first reference block
-    for (i=0; i<num_symbols_ref; i++)
+    // reference block
+    for (unsigned int i=0; i<num_symbols_ref; i++)
         firinterp_crcf_execute(interp, syms_ref[i], &buf_slot[2*n++]);
 
     // payload symbols
-    for (i=0; i<num_symbols_frame; i++)
+    for (unsigned int i=0; i<num_symbols_frame; i++)
         firinterp_crcf_execute(interp, syms_frame[i], &buf_slot[2*n++]);
 
     // last guard period, flushing filter
-    for (i=0; i<num_symbols_guard + m; i++)
+    for (unsigned int i=0; i<num_symbols_guard + m; i++)
         firinterp_crcf_execute(interp, 0, &buf_slot[2*n++]);
 
     //assert(n == num_symbols_slot);

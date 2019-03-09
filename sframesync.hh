@@ -6,6 +6,7 @@
 #include <complex>
 #include <liquid/liquid.h>
 #include "sframe.hh"
+#include "sdetect.hh"
 
 class sframesync : public sframe
 {
@@ -19,14 +20,13 @@ class sframesync : public sframe
      *  @param  _buf : buffer of raw received samples
      *  @return pointer to output decoded frame, NULL if invalid
      */
-    void * receive(std::complex<float> * _buf);
+    void * receive(const std::complex<float> * _buf);
 
     /*! @brief get timing offset estimate from last slot */
     float get_timing_offset() { return 0; }
 
   protected:
-
-    // fft for detection, time/freq buffers, etc.
+    sdetect detector;           ///< reference symbol detector
 };
 
 #endif // __SFRAMESYNC_HH__

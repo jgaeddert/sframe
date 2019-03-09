@@ -29,7 +29,7 @@ class sdetect
      *  @param  _buf : buffer of raw received samples
      *  @return pointer to output decoded frame, NULL if invalid
      */
-    results execute(std::complex<float> * _buf);
+    results execute(const std::complex<float> * _buf);
 
   protected:
     // fft for detection, time/freq buffers, etc.
@@ -39,6 +39,7 @@ class sdetect
     std::complex<float> *   buf_freq;   ///< freq-domain buffer
     fftwf_plan              fft;        ///< fft object (forward)
     fftwf_plan              ifft;       ///< fft object (reverse)
+    float                   ref2;       ///< sum of squares for reference level (time domain)
 };
 
 #endif // __SDETECT_HH__
