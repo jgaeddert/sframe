@@ -25,16 +25,18 @@ class sframe
 
     // frame lengths
     unsigned int payload_len;           ///< length of payload (bytes)
-    unsigned int num_symbols_frame;     ///< number of modulated symbols in qpacketmodem
+    unsigned int num_symbols_payload;   ///< number of modulated symbols in qpacketmodem
+    unsigned int pilot_spacing;         ///< spacing between pilot symbols
+    unsigned int num_symbols_frame;     ///< number of modulated symbols with pilots added
     unsigned int num_symbols_ref;       ///< number of reference symbols at front/tail
     unsigned int num_symbols_guard;     ///< number of guard symbols at front/tail
     unsigned int num_symbols_slot;      ///< total number of symbols in slot
     unsigned int num_samples_slot;      ///< length of slot (samples)
 
     // buffers
-    std::complex<float> * syms_ref_0;   ///< reference symbols at head of slot
-    std::complex<float> * syms_ref_1;   ///< reference symbols at tail of slot
-    std::complex<float> * syms_frame;   ///< frame symbols (e.g. data)
+    std::complex<float> * syms_ref;     ///< reference symbols at head of slot
+    std::complex<float> * syms_payload; ///< payload symbols (e.g. data)
+    std::complex<float> * syms_frame;   ///< frame symbols with pilots included
     std::complex<float> * buf_slot;     ///< entire slot buffer [samples]
 
     //
