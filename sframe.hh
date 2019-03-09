@@ -6,8 +6,11 @@
 #include <complex>
 #include <liquid/liquid.h>
 
+class sdetect;
+
 class sframe
 {
+  friend class sdetect;
   public:
     /*! @brief slot frame base class
      */
