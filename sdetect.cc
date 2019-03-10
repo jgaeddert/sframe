@@ -128,7 +128,11 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
 
         // compute timing offset (samples)
         // TODO: interpolate between available sample points
-        results.tau_hat = imax < nfft/2 ? (float)imax : (float)imax - (float)nfft;
+        float dt = quadratic_interpolation(
+            std::abs(buf_time[(imax + nfft - 1) % nfft]),
+            std::abs(buf_time[ imax                   ]),
+            std::abs(buf_time[(imax + nfft + 1) % nfft]) );
+        results.tau_hat = (imax < nfft/2 ? (float)imax : (float)imax - (float)nfft) + dt;
 
         // compute carrier phase offset estimate
         results.phi_hat = std::arg(buf_time[imax]);
@@ -136,17 +140,27 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
         // compute carrier frequency offset estimate
         results.dphi_hat = 2*M_PI*(float)p / (float)nfft;
 
-        //
-        //printf("  p = %3d, rxy = %12.8f, dphi-hat: %12.8f\n", p, results.rxy, results.dphi_hat);
-    }
-
 #if 0
-    // save results to file
-    FILE * fid = fopen("sdetect.dat","w");
-    for (unsigned int i=0; i<nfft; i++)
-        fprintf(fid,"%12.4e %12.4e\n", g*buf_time[i].real(), g*buf_time[i].imag());
-    fclose(fid);
+        printf("  p = %3d, rxy = %12.8f, dphi-hat: %12.8f\n", p, results.rxy, results.dphi_hat);
+        // save results to file
+        FILE * fid = fopen("sdetect.dat","w");
+        for (unsigned int i=0; i<nfft; i++)
+            fprintf(fid,"%12.4e %12.4e\n", g*buf_time[i].real(), g*buf_time[i].imag());
+        fclose(fid);
 #endif
 
+    }
+
     return results;
+}
+
+float sdetect::quadratic_interpolation(float _yneg, float _y0, float _ypos)
+{
+    if (_yneg > _y0 || _ypos > _y0)
+        throw std::runtime_error("invalid bounds for quadratic interpolation");
+
+    float a = 0.5f*(_ypos + _yneg) - _y0;
+    float b = 0.5f*(_ypos - _yneg);
+    //float c = _y0;
+    return -b / (2.0f*a);
 }

@@ -47,6 +47,13 @@ class sdetect
     fftwf_plan              ifft;       ///< fft object (reverse)
     float                   ref2;       ///< sum of squares for reference level (time domain)
     int                     range;      ///< frequency offset range index
+
+  private:
+    /*! compute quadratic interpolation in (x,y) for the set
+     * { (-1,_yneg), (0, _y0), (+1,_ypos) }
+     *  to give the x-value that maximizes y.
+     */
+    float quadratic_interpolation(float _yneg, float _y0, float _ypos);
 };
 
 #endif // __SDETECT_HH__
