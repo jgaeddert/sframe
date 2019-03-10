@@ -8,7 +8,7 @@ sdetect::sdetect(const sframe * _ref)
     unsigned int k = 2;
     unsigned int m = std::min(_ref->num_symbols_guard, 9U);
     unsigned int p = _ref->num_symbols_ref + 2*_ref->num_symbols_guard;
-    nfft = 2 << (unsigned int)(roundf(liquid_nextpow2(k*p)));
+    nfft = 1 << (unsigned int)(roundf(liquid_nextpow2(k*p)));
     nfft = std::min(nfft, _ref->num_samples_slot); // ensure we don't observe more than the slot time
 
     // TODO: allocate with fft allocation methods
@@ -99,6 +99,10 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
     // normalize peak
     float g = 1.0f / ( (float)nfft * ref2 * results.rms );
     results.rxy = vmax * g;
+
+    // compute timing offset (samples)
+    // TODO: interpolate between available sample points
+    results.tau_hat = imax < nfft/2 ? (float)imax : (float)imax - (float)nfft;
 
 #if 0
     // save results to file

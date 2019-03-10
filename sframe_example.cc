@@ -3,7 +3,10 @@
 
 int main() {
     // options
-    unsigned int payload_len = 256;
+    unsigned int payload_len = 256;     // number of bytes in payload
+    float        g           = 0.1f;    // channel gain
+    int          dt          = -3;      // timing offset
+    float        nstd        = 0.01f;   // noise standard deviation
     const char * filename    = "sframe_example.dat";
 
     // create objects
@@ -26,17 +29,21 @@ int main() {
     // generate frame
     const std::complex<float> * buf = gen.generate(payload);
 
+    // run through "channel"
+    for (unsigned int i=0; i<num_samples; i++) {
+        buf_channel[i] = g * buf[(num_samples+i-dt)%num_samples] +
+                         std::complex<float>(randnf(),randnf()) * float(nstd*M_SQRT1_2);
+    }
+
     // save samples to output file
     FILE * fid = fopen(filename,"w");
-    for (unsigned int i=0; i<num_samples; i++)
-        fprintf(fid,"  %12.8f %12.8f\n", buf[i].real(), buf[i].imag());
+    for (unsigned int i=0; i<num_samples; i++) {
+        fprintf(fid,"  %12.8f %12.8f %12.4e %12.4e\n",
+                buf[i].real(), buf[i].imag(),
+                buf_channel[i].real(), buf_channel[i].imag());
+    }
     fclose(fid);
     printf("results written to %s\n", filename);
-
-    // run through "channel"
-    float g = 0.1f;
-    for (unsigned int i=0; i<num_samples; i++)
-        buf_channel[i] = g * buf[i];
 
     // run through detector
     sync.receive(buf_channel);
