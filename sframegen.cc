@@ -9,11 +9,8 @@ sframegen::sframegen(unsigned int _payload_len) :
     // create object to add pilots for phase recovery
     gen = qpilotgen_create(num_symbols_payload, pilot_spacing);
 
-    // compute filter semi-length
-    m = std::min(num_symbols_guard, 9U);
-
     // create square-root nyquist interpolator with 2 samples/symbol
-    interp = firinterp_crcf_create_prototype(LIQUID_FIRFILT_ARKAISER, 2, m, 0.25f, 0.0f);
+    interp = firinterp_crcf_create_prototype(LIQUID_FIRFILT_ARKAISER, k, m, beta, 0.0f);
 }
 
 sframegen::~sframegen()
@@ -25,9 +22,6 @@ sframegen::~sframegen()
 
 const std::complex<float> * sframegen::generate(unsigned char * _payload)
 {
-    // reset buffer
-    memset(buf_slot, 0x00, num_samples_slot*sizeof(std::complex<float>));
-
     // encode frame symbols
     qpacketmodem_encode(mod, _payload, syms_payload);
 
@@ -40,19 +34,19 @@ const std::complex<float> * sframegen::generate(unsigned char * _payload)
 
     // first guard period, compensating for filter delay
     for (unsigned int i=0; i<num_symbols_guard - m; i++)
-        firinterp_crcf_execute(interp, 0, &buf_slot[2*n++]);
+        firinterp_crcf_execute(interp, 0, &buf_slot[k*n++]);
 
     // reference block
     for (unsigned int i=0; i<num_symbols_ref; i++)
-        firinterp_crcf_execute(interp, syms_ref[i], &buf_slot[2*n++]);
+        firinterp_crcf_execute(interp, syms_ref[i], &buf_slot[k*n++]);
 
     // payload symbols
     for (unsigned int i=0; i<num_symbols_frame; i++)
-        firinterp_crcf_execute(interp, syms_frame[i], &buf_slot[2*n++]);
+        firinterp_crcf_execute(interp, syms_frame[i], &buf_slot[k*n++]);
 
     // last guard period, flushing filter
     for (unsigned int i=0; i<num_symbols_guard + m; i++)
-        firinterp_crcf_execute(interp, 0, &buf_slot[2*n++]);
+        firinterp_crcf_execute(interp, 0, &buf_slot[k*n++]);
 
     //assert(n == num_symbols_slot);
     return buf_slot;

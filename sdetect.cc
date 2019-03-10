@@ -4,12 +4,19 @@
 
 sdetect::sdetect(const sframe * _ref)
 {
+    // get relevant parameters from base object
+    unsigned int          k                 = _ref->k;
+    unsigned int          m                 = _ref->m;
+    float                 beta              = _ref->beta;
+    std::complex<float> * syms_ref          = _ref->syms_ref;
+    unsigned int          num_symbols_ref   = _ref->num_symbols_ref;
+    unsigned int          num_symbols_guard = _ref->num_symbols_guard;
+    unsigned int          num_samples_slot  = _ref->num_samples_slot;
+
     // TODO: adjust fft size appropriately
-    unsigned int k = 2;
-    unsigned int m = std::min(_ref->num_symbols_guard, 9U);
-    unsigned int p = _ref->num_symbols_ref + 2*_ref->num_symbols_guard;
+    unsigned int p = num_symbols_ref + 2*num_symbols_guard;
     nfft = 1 << (unsigned int)(roundf(liquid_nextpow2(k*p)));
-    nfft = std::min(nfft, _ref->num_samples_slot); // ensure we don't observe more than the slot time
+    nfft = std::min(nfft, num_samples_slot); // ensure we don't observe more than the slot time
 
     // TODO: allocate with fft allocation methods
     R          = new std::complex<float>[nfft];
@@ -21,21 +28,21 @@ sdetect::sdetect(const sframe * _ref)
     fft  = fftwf_plan_dft_1d(nfft, reinterpret_cast<fftwf_complex*>(buf_time  ), reinterpret_cast<fftwf_complex*>(buf_freq_0), FFTW_FORWARD,  FFTW_ESTIMATE);
     ifft = fftwf_plan_dft_1d(nfft, reinterpret_cast<fftwf_complex*>(buf_freq_1), reinterpret_cast<fftwf_complex*>(buf_time  ), FFTW_BACKWARD, FFTW_ESTIMATE);
 
-    // create (temporary) square-root nyquist interpolator with 2 samples/symbol
-    firinterp_crcf interp = firinterp_crcf_create_prototype(LIQUID_FIRFILT_ARKAISER, 2, m, 0.25f, 0.0f);
+    // create (temporary) square-root nyquist interpolator
+    firinterp_crcf interp = firinterp_crcf_create_prototype(LIQUID_FIRFILT_ARKAISER, k, m, beta, 0.0f);
 
     // first guard period, compensating for filter delay
     unsigned int n=0;
-    for (unsigned int i=0; i<_ref->num_symbols_guard - m; i++)
-        firinterp_crcf_execute(interp, 0, &buf_time[2*n++]);
+    for (unsigned int i=0; i<num_symbols_guard - m; i++)
+        firinterp_crcf_execute(interp, 0, &buf_time[k*n++]);
 
     // reference block
-    for (unsigned int i=0; i<_ref->num_symbols_ref; i++)
-        firinterp_crcf_execute(interp, _ref->syms_ref[i], &buf_time[2*n++]);
+    for (unsigned int i=0; i<num_symbols_ref; i++)
+        firinterp_crcf_execute(interp, syms_ref[i], &buf_time[k*n++]);
 
     // flush with zeros
     while (n < nfft/k)
-        firinterp_crcf_execute(interp, 0, &buf_time[2*n++]);
+        firinterp_crcf_execute(interp, 0, &buf_time[k*n++]);
 
     // clean up temporary objects
     firinterp_crcf_destroy(interp);

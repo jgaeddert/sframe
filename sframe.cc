@@ -23,7 +23,10 @@ sframe::sframe(unsigned int _payload_len) :
     num_symbols_ref     = 120;
     num_symbols_guard   = 20;
     num_symbols_slot    = num_symbols_frame + num_symbols_ref + 2*num_symbols_guard;
-    num_samples_slot    = 2 * num_symbols_slot;
+    k                   = 2;
+    m                   = std::min(num_symbols_guard, 9U);
+    beta                = 0.25f;
+    num_samples_slot    = k * num_symbols_slot;
 
     // buffers
     syms_ref    = new std::complex<float>[num_symbols_ref    ];

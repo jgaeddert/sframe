@@ -13,8 +13,8 @@ int main() {
 
     // create objects
     sframegen  gen  = sframegen (payload_len);
-    sframesync sync = sframesync(payload_len);
     gen.print();
+    sframesync sync = sframesync(payload_len);
     sync.print();
 
     // number of samples in slot

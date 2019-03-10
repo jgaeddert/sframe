@@ -23,7 +23,6 @@ class sframegen : public sframe
 
   protected:
     qpilotgen      gen;     ///< pilot injection
-    unsigned int   m;       ///< filter semi-length
     firinterp_crcf interp;  ///< square-root Nyquist matched filter interpolator
 };
 

@@ -8,6 +8,8 @@
 
 class sdetect;
 
+/*! base class with common parameters for slot frames
+ */
 class sframe
 {
   friend class sdetect;
@@ -27,14 +29,17 @@ class sframe
   protected:
 
     // frame lengths
-    unsigned int payload_len;           ///< length of payload (bytes)
-    unsigned int num_symbols_payload;   ///< number of modulated symbols in qpacketmodem
-    unsigned int pilot_spacing;         ///< spacing between pilot symbols
-    unsigned int num_symbols_frame;     ///< number of modulated symbols with pilots added
-    unsigned int num_symbols_ref;       ///< number of reference symbols at front/tail
-    unsigned int num_symbols_guard;     ///< number of guard symbols at front/tail
-    unsigned int num_symbols_slot;      ///< total number of symbols in slot
-    unsigned int num_samples_slot;      ///< length of slot (samples)
+    unsigned int    payload_len;            ///< length of payload (bytes)
+    unsigned int    num_symbols_payload;    ///< number of modulated symbols in qpacketmodem
+    unsigned int    pilot_spacing;          ///< spacing between pilot symbols
+    unsigned int    num_symbols_frame;      ///< number of modulated symbols with pilots added
+    unsigned int    num_symbols_ref;        ///< number of reference symbols at front/tail
+    unsigned int    num_symbols_guard;      ///< number of guard symbols at front/tail
+    unsigned int    num_symbols_slot;       ///< total number of symbols in slot
+    unsigned int    k;                      ///< filter samples per symbol
+    unsigned int    m;                      ///< filter semi-length
+    float           beta;                   ///< filter excess bandwidth factor
+    unsigned int    num_samples_slot;       ///< length of slot (samples)
 
     // buffers
     std::complex<float> * syms_ref;     ///< reference symbols at head of slot
@@ -42,7 +47,7 @@ class sframe
     std::complex<float> * syms_frame;   ///< frame symbols with pilots included
     std::complex<float> * buf_slot;     ///< entire slot buffer [samples]
 
-    //
+    // common objects
     qpacketmodem mod;                   ///< combined modulation/FEC encoder
 };
 
