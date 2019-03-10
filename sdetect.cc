@@ -106,6 +106,9 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
     // TODO: interpolate between available sample points
     results.tau_hat = imax < nfft/2 ? (float)imax : (float)imax - (float)nfft;
 
+    // compute carrier phase offset estimate
+    results.phi_hat = std::arg(buf_time[imax]);
+
 #if 0
     // save results to file
     FILE * fid = fopen("sdetect.dat","w");
