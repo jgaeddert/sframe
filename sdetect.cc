@@ -46,6 +46,19 @@ sdetect::sdetect(const sframe * _ref)
 
     // compute signal level
     ref2 = liquid_sumsqcf(buf_time, nfft);
+
+    // set default frequency offset range
+    set_frequency_offset_range(0.05f);
+}
+
+void sdetect::set_frequency_offset_range(float _freq_range)
+{
+    if (_freq_range < -0.5f || _freq_range > 0.5f)
+        throw std::runtime_error("frequency offset range out of range");
+
+    // compute range for searching for frequency offset
+    range = (int)std::ceil( _freq_range * nfft / (2*M_PI) );
+    printf("range = %d\n", range);
 }
 
 sdetect::~sdetect()
@@ -74,40 +87,58 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
     // copy input to time-domain buffer
     memmove(buf_time, _buf, nfft*sizeof(std::complex<float>));
 
-    // compute...
+    // compute input signal RMS
     results.rms = std::sqrt( liquid_sumsqcf(buf_time, nfft) / (float)nfft );
 
     // run transform: buf_time -> buf_freq_0
     fftwf_execute(fft);
 
-    // cross-multiply with expected signal
-    for (unsigned int i=0; i<nfft; i++)
-        buf_freq_1[i] = buf_freq_0[i] * std::conj(R[i]);
+    // apply different frequency offset hypotheses
+    float vpeak = 0;
+    for (int p=-range; p<=range; p++) {
 
-    // run inverse transform: buf_freq_1 -> buf_time
-    fftwf_execute(ifft);
+        // cross-multiply with expected signal shifted by frequency offset
+        for (unsigned int i=0; i<nfft; i++)
+            buf_freq_1[i] = buf_freq_0[i] * std::conj(R[(nfft+i-p)%nfft]);
 
-    // find peak index of time-domain signal
-    float        vmax = 0;
-    unsigned int imax = 0;
-    for (unsigned int i=0; i<nfft; i++) {
-        float v = std::abs(buf_time[i]);
-        if (i==0 || v > vmax) {
-            vmax = v;
-            imax = i;
+        // run inverse transform: buf_freq_1 -> buf_time
+        fftwf_execute(ifft);
+
+        // find peak index of time-domain signal
+        float        vmax = 0;
+        unsigned int imax = 0;
+        for (unsigned int i=0; i<nfft; i++) {
+            float v = std::abs(buf_time[i]);
+            if (i==0 || v > vmax) {
+                vmax = v;
+                imax = i;
+            }
         }
+
+        // compare max for this with global maximum
+        if (vmax < vpeak)
+            continue;
+
+        // save peak
+        vpeak = vmax;
+
+        // normalize peak
+        float g = 1.0f / ( (float)nfft * ref2 * results.rms );
+        results.rxy = vmax * g;
+
+        // compute timing offset (samples)
+        // TODO: interpolate between available sample points
+        results.tau_hat = imax < nfft/2 ? (float)imax : (float)imax - (float)nfft;
+
+        // compute carrier phase offset estimate
+        results.phi_hat = std::arg(buf_time[imax]);
+
+        // compute carrier frequency offset estimate
+        results.dphi_hat = 2*M_PI*(float)p / (float)nfft;
+
+        //
+        //printf("  p = %3d, rxy = %12.8f, dphi-hat: %12.8f\n", p, results.rxy, results.dphi_hat);
     }
-
-    // normalize peak
-    float g = 1.0f / ( (float)nfft * ref2 * results.rms );
-    results.rxy = vmax * g;
-
-    // compute timing offset (samples)
-    // TODO: interpolate between available sample points
-    results.tau_hat = imax < nfft/2 ? (float)imax : (float)imax - (float)nfft;
-
-    // compute carrier phase offset estimate
-    results.phi_hat = std::arg(buf_time[imax]);
 
 #if 0
     // save results to file

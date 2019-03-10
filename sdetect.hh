@@ -25,6 +25,11 @@ class sdetect
         float phi_hat;  // carrier phase offset estimate
     };
 
+    /*! @brief set (normalized) frequency offset range to search over
+     *  @param _freq_range : frequency range to search over, relative to sample rate
+     */
+    void set_frequency_offset_range(float _freq_range);
+
     /*! @brief  run detection on reference symbols
      *  @param  _buf : buffer of raw received samples
      *  @return pointer to output decoded frame, NULL if invalid
@@ -41,6 +46,7 @@ class sdetect
     fftwf_plan              fft;        ///< fft object (forward)
     fftwf_plan              ifft;       ///< fft object (reverse)
     float                   ref2;       ///< sum of squares for reference level (time domain)
+    int                     range;      ///< frequency offset range index
 };
 
 #endif // __SDETECT_HH__
