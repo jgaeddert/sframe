@@ -36,7 +36,8 @@ class sdetect
     unsigned int            nfft;       ///< FFT size
     std::complex<float> *   R;          ///< reference sequence (freq domain)
     std::complex<float> *   buf_time;   ///< time-domain buffer
-    std::complex<float> *   buf_freq;   ///< freq-domain buffer
+    std::complex<float> *   buf_freq_0; ///< freq-domain buffer
+    std::complex<float> *   buf_freq_1; ///< freq-domain buffer
     fftwf_plan              fft;        ///< fft object (forward)
     fftwf_plan              ifft;       ///< fft object (reverse)
     float                   ref2;       ///< sum of squares for reference level (time domain)

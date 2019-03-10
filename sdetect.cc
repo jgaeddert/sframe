@@ -12,13 +12,14 @@ sdetect::sdetect(const sframe * _ref)
     nfft = std::min(nfft, _ref->num_samples_slot); // ensure we don't observe more than the slot time
 
     // TODO: allocate with fft allocation methods
-    R        = new std::complex<float>[nfft];
-    buf_time = new std::complex<float>[nfft];
-    buf_freq = new std::complex<float>[nfft];
+    R          = new std::complex<float>[nfft];
+    buf_time   = new std::complex<float>[nfft];
+    buf_freq_0 = new std::complex<float>[nfft];
+    buf_freq_1 = new std::complex<float>[nfft];
 
     // create transform objects
-    fft  = fftwf_plan_dft_1d(nfft, reinterpret_cast<fftwf_complex*>(buf_time), reinterpret_cast<fftwf_complex*>(buf_freq), FFTW_FORWARD,  FFTW_ESTIMATE);
-    ifft = fftwf_plan_dft_1d(nfft, reinterpret_cast<fftwf_complex*>(buf_freq), reinterpret_cast<fftwf_complex*>(buf_time), FFTW_BACKWARD, FFTW_ESTIMATE);
+    fft  = fftwf_plan_dft_1d(nfft, reinterpret_cast<fftwf_complex*>(buf_time  ), reinterpret_cast<fftwf_complex*>(buf_freq_0), FFTW_FORWARD,  FFTW_ESTIMATE);
+    ifft = fftwf_plan_dft_1d(nfft, reinterpret_cast<fftwf_complex*>(buf_freq_1), reinterpret_cast<fftwf_complex*>(buf_time  ), FFTW_BACKWARD, FFTW_ESTIMATE);
 
     // create (temporary) square-root nyquist interpolator with 2 samples/symbol
     firinterp_crcf interp = firinterp_crcf_create_prototype(LIQUID_FIRFILT_ARKAISER, 2, m, 0.25f, 0.0f);
@@ -41,7 +42,7 @@ sdetect::sdetect(const sframe * _ref)
 
     // run transform on reference and copy
     fftwf_execute(fft);
-    memmove(R, buf_freq, nfft*sizeof(std::complex<float>));
+    memmove(R, buf_freq_0, nfft*sizeof(std::complex<float>));
 
     // compute signal level
     ref2 = liquid_sumsqcf(buf_time, nfft);
@@ -56,7 +57,8 @@ sdetect::~sdetect()
     // free allocated memory
     delete [] R;
     delete [] buf_time;
-    delete [] buf_freq;
+    delete [] buf_freq_0;
+    delete [] buf_freq_1;
 }
 
 sdetect::results sdetect::execute(const std::complex<float> * _buf)
@@ -75,14 +77,14 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
     // compute...
     results.rms = std::sqrt( liquid_sumsqcf(buf_time, nfft) / (float)nfft );
 
-    // run transform: buf_time -> buf_freq
+    // run transform: buf_time -> buf_freq_0
     fftwf_execute(fft);
 
     // cross-multiply with expected signal
     for (unsigned int i=0; i<nfft; i++)
-        buf_freq[i] *= std::conj(R[i]);
+        buf_freq_1[i] = buf_freq_0[i] * std::conj(R[i]);
 
-    // run inverse transform: buf_freq -> buf_time
+    // run inverse transform: buf_freq_1 -> buf_time
     fftwf_execute(ifft);
 
     // find peak index of time-domain signal
