@@ -35,6 +35,9 @@ class sframesync : public sframe
         unsigned int                num_syms;   ///< number of symbols
     };
 
+    /*! @brief set threshold for detection; synchronizer won't attempt to decode below this value */
+    void set_threshold(float _rxy_threshold) { rxy_threshold = _rxy_threshold; }
+
     /*! @brief  receive frame within slot
      *  @param  _buf : buffer of raw received samples
      *  @return pointer to output decoded frame, NULL if invalid
@@ -43,6 +46,7 @@ class sframesync : public sframe
 
   protected:
     sdetect         detector;       ///< reference symbol detector
+    float           rxy_threshold;  ///< threshold for which decoder need to attempt decoding
     nco_crcf        mixer;          ///< mixer for coarse carrier frequency/phase recovery
     unsigned int    npfb;           ///< number of poly-phase filters in bank
     firpfb_crcf     mf;             ///< poly-phase filter-bank for matched filter & timing recovery

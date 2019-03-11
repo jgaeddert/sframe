@@ -4,7 +4,8 @@
 
 sframesync::sframesync(unsigned int _payload_len) :
     sframe(_payload_len),
-    detector(this)
+    detector(this),
+    rxy_threshold(0) // attempt to decode all frames
 {
     payload_rec = new unsigned char[_payload_len];
 
@@ -32,8 +33,10 @@ sframesync::results sframesync::receive(const std::complex<float> * _buf)
     // run detector and evaluate results
     sdetect::results r = detector.execute(_buf);
 
-    // assemble results object
+    // assemble results object and return if threshold is not exceeded
     sframesync::results results(r);
+    if (results.rxy < rxy_threshold)
+        return results;
     
     // set mixer frequency appropriately; ignore phase offset
     nco_crcf_set_frequency(mixer, r.dphi_hat);
