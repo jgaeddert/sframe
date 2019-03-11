@@ -5,7 +5,7 @@ int main() {
     // options
     unsigned int payload_len = 256;     // number of bytes in payload
     float        g           = 0.1f;    // channel gain
-    int          dt          = -3;      // timing offset
+    int          dt          = -17;     // timing offset
     float        phi         = 0.50f;   // carrier phase offset
     float        dphi        = 0.02f;   // carrier frequency offset
     float        nstd        = 0.01f;   // noise standard deviation
