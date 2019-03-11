@@ -1,16 +1,17 @@
 
 all:
 
+CFLAGS  := -Wall -O2 -std=c++11
 LDFLAGS := -lc -lm -lliquid -lfftw3f
 
 lib := sframe.o sframegen.o sframesync.o sdetect.o
 prog := sframe_example
 
 ${lib} : %.o : %.cc %.hh
-	g++ -Wall -O2 -c -o $@ $<
+	g++ ${CFLAGS} -c -o $@ $<
 
 ${prog} : % : %.cc ${lib}
-	g++ -Wall -O2 -o $@ $< ${lib} ${LDFLAGS}
+	g++ ${CFLAGS} -o $@ $< ${lib} ${LDFLAGS}
 
 all: ${prog}
 

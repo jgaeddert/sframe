@@ -12,6 +12,8 @@ sframesync::sframesync(unsigned int _payload_len) :
     mixer = nco_crcf_create(LIQUID_NCO);
     npfb  = 16;
     mf    = firpfb_crcf_create_rnyquist(LIQUID_FIRFILT_ARKAISER, npfb, k, m, beta);
+    firpfb_crcf_set_scale(mf, 1.0f/(float)k);
+
     sync  = qpilotsync_create(num_symbols_payload, pilot_spacing);
 }
 
@@ -25,25 +27,21 @@ sframesync::~sframesync()
     qpilotsync_destroy (sync);
 }
 
-void * sframesync::receive(const std::complex<float> * _buf)
+sframesync::results sframesync::receive(const std::complex<float> * _buf)
 {
     // run detector and evaluate results
-    sdetect::results results = detector.execute(_buf);
-    
-    printf("results:\n");
-    printf("  rms      = %12.8f\n", results.rms);
-    printf("  rxy      = %12.8f\n", results.rxy);
-    printf("  tau_hat  = %12.8f\n", results.tau_hat);
-    printf("  dphi_hat = %12.8f\n", results.dphi_hat);
-    printf("  phi_hat  = %12.8f\n", results.phi_hat);
+    sdetect::results r = detector.execute(_buf);
 
+    // assemble results object
+    sframesync::results results(r);
+    
     // set mixer frequency appropriately; ignore phase offset
-    nco_crcf_set_frequency(mixer, results.dphi_hat);
+    nco_crcf_set_frequency(mixer, r.dphi_hat);
 
     // reset matched filter and compute values for timing recovery
     firpfb_crcf_reset(mf);
-    int          dt        = (int)std::floor(results.tau_hat);
-    unsigned int pfb_index = (unsigned int)std::round((results.tau_hat - (float)dt) * npfb);
+    int          dt        = (int)std::floor(r.tau_hat);
+    unsigned int pfb_index = (unsigned int)std::round((r.tau_hat - (float)dt) * npfb);
     if (pfb_index >= npfb) { dt++; pfb_index -= npfb; }
     // assert( dt isn't too large )
     unsigned int offset = k*( m + num_symbols_guard + num_symbols_ref ) + dt;
@@ -82,9 +80,16 @@ void * sframesync::receive(const std::complex<float> * _buf)
     qpilotsync_execute(sync, syms_frame, syms_payload);
 
     // demodulate/decode payload
-    int crc_pass =
-    qpacketmodem_decode_soft(mod, syms_payload, payload_rec);
-    printf("crc : %s\n", crc_pass ? "pass!" : "FAIL!");
+    results.crc_pass = qpacketmodem_decode_soft(mod, syms_payload, payload_rec);
+
+    // populate results field
+    results.payload     =  (const unsigned char *)payload_rec;
+    results.payload_len =  payload_len;
+    results.dphi_hat    += qpilotsync_get_dphi(sync) / (float)k;
+    results.rssi        =  10*log10f( qpilotsync_get_gain(sync) );
+    results.evm         =  20*log10f( qpacketmodem_get_demodulator_evm(mod) + 1e-6f );
+    results.syms        =  (const std::complex<float>*) syms_payload;
+    results.num_syms    =  num_symbols_payload;
 
 #if 0
     // dump results
@@ -99,5 +104,51 @@ void * sframesync::receive(const std::complex<float> * _buf)
     fclose(fid);
 #endif
 
-    return NULL;
+    return results;
 }
+
+//
+// results object
+//
+
+sframesync::results::results() :
+    payload(NULL), payload_len(0),
+    crc_pass(false),
+    rssi(0), rxy(0), tau_hat(0), dphi_hat(0), evm(0),
+    syms(NULL), num_syms(0)
+{
+}
+
+sframesync::results::results(sdetect::results & _r) :
+    sframesync::results()
+{
+    rssi     = 20*log10f(_r.rms);
+    rxy      = _r.rxy;
+    tau_hat  = _r.tau_hat;
+    dphi_hat = _r.dphi_hat;
+}
+
+void sframesync::results::print()
+{
+    printf("sframesync results:\n");
+    printf("  rssi     = %12.6f dB\n",         rssi);
+    printf("  rxy      = %12.6f\n",            rxy);
+    printf("  tau_hat  = %12.6f samples\n",    tau_hat);
+    printf("  dphi_hat = %12.6f rad/sample\n", dphi_hat);
+    printf("  evm      = %12.6f dB\n",         evm);
+    if (num_syms >= 4) {
+        printf("  syms     = (%6.3f,%6.3f) (%6.3f,%6.3f) (%6.3f,%6.3f) (%6.3f,%6.3f)...\n",
+                syms[0].real(), syms[0].imag(),
+                syms[1].real(), syms[1].imag(),
+                syms[2].real(), syms[2].imag(),
+                syms[3].real(), syms[3].imag());
+    }
+    if (payload != NULL && payload_len >= 4) {
+        printf("  payload  = [");
+        for (unsigned int i=0; i<std::min(payload_len, 20U); i++)
+            printf(" %.2x", payload[i]);
+        printf("...]\n");
+        printf("  payload  = %s\n", crc_pass ? "valid" : "INVALID");
+    }
+}
+

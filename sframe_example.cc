@@ -7,7 +7,7 @@ int main() {
     float        g           = 0.1f;    // channel gain
     int          dt          = -17;     // timing offset
     float        phi         = 0.50f;   // carrier phase offset
-    float        dphi        = 0.02f;   // carrier frequency offset
+    float        dphi        = 0.02f;   // carrier frequency offset [radians/sample]
     float        nstd        = 0.01f;   // noise standard deviation
     const char * filename    = "sframe_example.dat";
 
@@ -54,7 +54,10 @@ int main() {
     printf("results written to %s\n", filename);
 
     // run through detector
-    sync.receive(buf_channel);
+    sframesync::results r = sync.receive(buf_channel);
+
+    // print results
+    r.print();
 
     return 0;
 }

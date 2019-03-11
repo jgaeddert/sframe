@@ -16,14 +16,30 @@ class sframesync : public sframe
     sframesync(unsigned int _payload_len);
     ~sframesync();
 
+    /*! @brief reciever results */
+    struct results {
+        results();
+        results(sdetect::results &);
+        void print();
+
+        const unsigned char *       payload;    ///< recovered payload bytes
+        unsigned int                payload_len;///< length of payload [bytes]
+        bool                        crc_pass;   ///< flag indicating if payload was received correctly
+
+        float                       rssi;       ///< signal received signal strength indication [dB]
+        float                       rxy;        ///< cross-correlator peak
+        float                       tau_hat;    ///< timing offset estimate [samples]
+        float                       dphi_hat;   ///< carrier frequency offset estimate [radians/sample]
+        float                       evm;        ///< receiver error vector magnitude
+        const std::complex<float> * syms;       ///< recovered payload symbols before demodulation
+        unsigned int                num_syms;   ///< number of symbols
+    };
+
     /*! @brief  receive frame within slot
      *  @param  _buf : buffer of raw received samples
      *  @return pointer to output decoded frame, NULL if invalid
      */
-    void * receive(const std::complex<float> * _buf);
-
-    /*! @brief get timing offset estimate from last slot */
-    float get_timing_offset() { return 0; }
+    results receive(const std::complex<float> * _buf);
 
   protected:
     sdetect         detector;       ///< reference symbol detector
