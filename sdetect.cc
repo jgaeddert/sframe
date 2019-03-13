@@ -65,7 +65,6 @@ void sdetect::set_frequency_offset_range(float _freq_range)
 
     // compute range for searching for frequency offset
     range = (int)std::ceil( _freq_range * nfft / (2*M_PI) );
-    printf("range = %d\n", range);
 }
 
 sdetect::~sdetect()
