@@ -15,8 +15,17 @@ class sframe
   friend class sdetect;
   public:
     /*! @brief slot frame base class
+     *  @param _payload_len : length of payload [bytes]
+     *  @param _check       : error detection scheme
+     *  @param _fec0        : outer forward error-correction scheme
+     *  @param _fec1        : inner forward error-correction scheme
+     *  @param _ms          : linear modulation scheme
      */
-    sframe(unsigned int _payload_len);
+    sframe(unsigned int _payload_len,
+           crc_scheme   _check = LIQUID_CRC_32,
+           fec_scheme   _fec0  = LIQUID_FEC_NONE,
+           fec_scheme   _fec1  = LIQUID_FEC_NONE,
+           int          _ms    = LIQUID_MODEM_QPSK);
     ~sframe();
 
     // accessor methods

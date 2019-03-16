@@ -2,13 +2,16 @@
 
 #include "sframe.hh"
 
-sframe::sframe(unsigned int _payload_len) :
+sframe::sframe(unsigned int _payload_len,
+               crc_scheme   _check,
+               fec_scheme   _fec0,
+               fec_scheme   _fec1,
+               int          _ms) :
     payload_len(_payload_len)
 {
     // create and configure mod/fec object
     mod = qpacketmodem_create();
-    qpacketmodem_configure(mod,
-        payload_len, LIQUID_CRC_32, LIQUID_FEC_NONE, LIQUID_FEC_NONE, LIQUID_MODEM_QPSK);
+    qpacketmodem_configure(mod, payload_len, _check, _fec0, _fec1, _ms);
 
     // frame lengths
     num_symbols_payload = qpacketmodem_get_frame_len(mod);
