@@ -5,7 +5,11 @@ CFLAGS  := -Wall -O2 -std=c++11 -I.
 LDFLAGS := -lc -lm -lliquid -lfftw3f
 
 lib := sframe.o sframegen.o sframesync.o sdetect.o
-prog := examples/sframe_example examples/sframesync_benchmark_example
+
+prog :=						\
+	examples/sframe_example			\
+	examples/sframesync_benchmark_example	\
+	examples/sframesync_timing_example	\
 
 headers := $(patsubst %.o,%.hh,${lib})
 
