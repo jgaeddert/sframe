@@ -3,8 +3,12 @@
 #include <string.h>
 #include "sframegen.hh"
 
-sframegen::sframegen(unsigned int _payload_len) :
-    sframe(_payload_len)
+sframegen::sframegen(unsigned int _payload_len,
+                     crc_scheme   _check,
+                     fec_scheme   _fec0,
+                     fec_scheme   _fec1,
+                     int          _ms) :
+    sframe(_payload_len, _check, _fec0, _fec1, _ms)
 {
     // create object to add pilots for phase recovery
     gen = qpilotgen_create(num_symbols_payload, pilot_spacing);

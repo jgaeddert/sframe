@@ -2,8 +2,12 @@
 
 #include "sframesync.hh"
 
-sframesync::sframesync(unsigned int _payload_len) :
-    sframe(_payload_len),
+sframesync::sframesync(unsigned int _payload_len,
+                       crc_scheme   _check,
+                       fec_scheme   _fec0,
+                       fec_scheme   _fec1,
+                       int          _ms) :
+    sframe(_payload_len, _check, _fec0, _fec1, _ms),
     detector(this),
     rxy_threshold(0) // attempt to decode all frames
 {

@@ -13,7 +13,11 @@ class sframesync : public sframe
   public:
     /*! @brief create slot frame generator
      */
-    sframesync(unsigned int _payload_len);
+    sframesync(unsigned int _payload_len,
+               crc_scheme   _check = LIQUID_CRC_32,
+               fec_scheme   _fec0  = LIQUID_FEC_NONE,
+               fec_scheme   _fec1  = LIQUID_FEC_NONE,
+               int          _ms    = LIQUID_MODEM_QPSK);
     ~sframesync();
 
     /*! @brief reciever results */

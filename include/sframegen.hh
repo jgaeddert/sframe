@@ -12,7 +12,11 @@ class sframegen : public sframe
   public:
     /*! @brief create slot frame generator
      */
-    sframegen(unsigned int _payload_len);
+    sframegen(unsigned int _payload_len,
+              crc_scheme   _check = LIQUID_CRC_32,
+              fec_scheme   _fec0  = LIQUID_FEC_NONE,
+              fec_scheme   _fec1  = LIQUID_FEC_NONE,
+              int          _ms    = LIQUID_MODEM_QPSK);
     ~sframegen();
 
     /*! @brief generate frame and pass pointer to time-domain samples for transmission
