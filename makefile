@@ -9,6 +9,7 @@ lib := src/sframe.o src/sframegen.o src/sframesync.o src/sdetect.o
 prog :=						\
 	examples/sframe_example			\
 	examples/sframesync_benchmark_example	\
+	examples/sframesync_roc_example		\
 	examples/sframesync_timing_example	\
 
 headers := $(patsubst src/%.o,include/%.hh,${lib})
