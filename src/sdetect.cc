@@ -132,8 +132,7 @@ sdetect::results sdetect::execute(const std::complex<float> * _buf)
         float g = 1.0f / ( (float)nfft * ref2 * results.rms );
         results.rxy = vmax * g;
 
-        // compute timing offset (samples)
-        // TODO: interpolate between available sample points
+        // compute timing offset (samples) by interpolating between available sample points
         float dt = quadratic_interpolation(
             std::abs(buf_time[(imax + nfft - 1) % nfft]),
             std::abs(buf_time[ imax                   ]),
