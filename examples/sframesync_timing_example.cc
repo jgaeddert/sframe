@@ -42,7 +42,6 @@ results run_batch(unsigned int _payload_len,
     // generate buffers
     unsigned int buf_len = gen.get_slot_len();
     std::complex<float> buf_channel[buf_len];
-    unsigned char payload[_payload_len];
 
     // delay filter
     unsigned int m      = 15;               // delay filter semi-length
@@ -54,12 +53,8 @@ results run_batch(unsigned int _payload_len,
     float tau_rmse = 0.0f;  // timing root mean-squared error
     float tau_avg  = 0.0f;  // average timing estimate (bias)
     for (unsigned int t=0; t<_num_trials; t++) {
-        // generate payload data
-        for (unsigned int i=0; i<_payload_len; i++)
-            payload[i] = rand() & 0xff;
-
-        // generate frame
-        const std::complex<float> * buf = gen.generate(payload);
+        // generate frame with random payload
+        const std::complex<float> * buf = gen.generate();
         firfilt_crcf_reset(fdelay);
 
         // run through channel

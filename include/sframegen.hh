@@ -25,6 +25,9 @@ class sframegen : public sframe
      */
     const std::complex<float> * generate(unsigned char * _payload);
 
+    /*! @brief generate frame with random data */
+    const std::complex<float> * generate();
+
   protected:
     qpilotgen      gen;     ///< pilot injection
     firinterp_crcf interp;  ///< square-root Nyquist matched filter interpolator

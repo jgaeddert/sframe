@@ -55,3 +55,16 @@ const std::complex<float> * sframegen::generate(unsigned char * _payload)
     //assert(n == num_symbols_slot);
     return buf_slot;
 }
+
+const std::complex<float> * sframegen::generate()
+{
+    // random payload
+    unsigned char payload[payload_len];
+
+    // initialize payload
+    for (unsigned int i=0; i<payload_len; i++)
+        payload[i] = rand() & 0xff;
+
+    // generate frame
+    return generate(payload);
+}

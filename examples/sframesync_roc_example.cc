@@ -17,7 +17,6 @@ int main() {
     // generate buffers
     unsigned int buf_len = gen.get_slot_len();
     std::complex<float> buf_channel[buf_len];
-    unsigned char payload[payload_len];
 
     float nstd = powf(10.0f, -SNRdB/20.0f) * M_SQRT1_2;
 
@@ -37,12 +36,8 @@ int main() {
         r = sync.receive(buf_channel);
         rxy_0[t] = r.rxy;
 
-        // generate payload data
-        for (unsigned int i=0; i<payload_len; i++)
-            payload[i] = rand() & 0xff;
-
-        // generate frame
-        const std::complex<float> * buf = gen.generate(payload);
+        // generate frame with random payload
+        const std::complex<float> * buf = gen.generate();
 
         // add signal onto noise
         for (unsigned int i=0; i<buf_len; i++)
